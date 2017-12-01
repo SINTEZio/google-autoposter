@@ -1,0 +1,489 @@
+Tab Tab1 = instance.ActiveTab;
+
+instance.ClearCache(); //очищаю кэш
+instance.ClearCookie(); //очищаю куки
+instance.AllowPopUp = false; //запрещаю всплывающие окна
+
+instance.SetWindowSize(1366, 800);
+instance.CanvasRenderMode = ZennoLab.InterfacesLibrary.Enums.Browser.CanvasMode.Emulate; //включаем эмуляцию канваса
+instance.CanvasRenderSeed = Guid.NewGuid().ToString(); //генерируем новый Canvas Seed
+
+SibboraHelper.WebHelper wHelper = new SibboraHelper.WebHelper(instance, project);
+wHelper.GlobalKMEmulate = true;
+
+bool ProtectXPath = true;
+
+Random rndGenerator = new Random();
+
+int PauseBefore = rndGenerator.Next(0, 50);
+int PauseBetweenChecks = rndGenerator.Next(0, 50);
+int Timeout = rndGenerator.Next(15000, 30000);
+int FullEmulationDelayFrom = rndGenerator.Next(0, 50);
+int FullEmulationDelayTo = rndGenerator.Next(0, 50);
+int SendTextMinDelay = rndGenerator.Next(0, 50);
+int SendTextMaxDelay = rndGenerator.Next(0, 50);
+
+int intSpeedModeSend = rndGenerator.Next(0, 5000);
+wHelper.PauseBefore = intSpeedModeSend;
+
+var tblMultiakk = project.Tables["multiakk"];
+
+IZennoList lstProxy = project.Lists["proxy"];
+string strProxyList = project.Variables["proxy"].Value;
+string strProyType = string.Empty;
+List<string> lstProxyTemp = new List<string>();
+string strProxy = string.Empty;
+if (strProxyList!=string.Empty) {
+	if (lstProxy.Count==0) {
+		project.SendInfoToLog("Добавьте прокси в список, на данным момент работаем без прокси",true);
+	} else {
+		lock (SyncObjects.ListSyncer) {
+			strProxy = lstProxy[0];
+			lstProxy.RemoveAt(0);
+			lstProxy.Add(strProxy);
+			instance.SetProxy(strProxy, false, true, true);
+			string strAPIResponse = ZennoPoster.HttpGet("https://whoer.net/ru", strProxy, "UTF-8", ZennoLab.InterfacesLibrary.Enums.Http.ResponceType.BodyOnly, 30000);
+			strAPIResponse = new Regex(@"(?<=<span\ class=""cont\ \ overdots"">)[\w\W]*?(?=</dd>)").Match(strAPIResponse).Value;
+			if (strAPIResponse.Contains("Ru") || strAPIResponse.Contains("ru")) {
+				Random r = new Random();
+				string[] acceptLanguageSet = {
+				    "ru-RU,ru;q=0.8,en-US;q=0.6,en;q=0.4",
+				    "ru-RU,ru;q=0.9,en;q=0.8",
+				    "ru-RU,ru;q=0.8,en-US;q=0.5,en;q=0.3"
+				};
+				// Устанавливаем Accept-Language
+				string acceptLanguage = acceptLanguageSet[r.Next(0, acceptLanguageSet.Length)].ToString();
+				project.Profile.AcceptLanguage = acceptLanguage;
+				// Устанавливаем настройки языка
+				project.Profile.UserAgentBrowserLanguage = acceptLanguage.Substring(0, acceptLanguage.IndexOf(','));
+				project.Profile.UserAgentLanguage = acceptLanguage.Substring(0, acceptLanguage.IndexOf(','));
+			} else {
+				Random R = new Random();
+				string[] acceptLanguageSet1 = {
+						"en-US,en;q=0.5"
+				};
+				string acceptLanguage1 = acceptLanguageSet1[R.Next(0, acceptLanguageSet1.Length)].ToString();
+				project.Profile.AcceptLanguage = acceptLanguage1;
+				// Устанавливаем настройки языка
+				project.Profile.UserAgentBrowserLanguage = acceptLanguage1.Substring(0, acceptLanguage1.IndexOf(','));
+				project.Profile.UserAgentLanguage = acceptLanguage1.Substring(0, acceptLanguage1.IndexOf(','));
+			}
+		}
+	}
+} else {
+	string strAPIResponse2 = ZennoPoster.HttpGet("https://whoer.net/ru", strProxy, "UTF-8", ZennoLab.InterfacesLibrary.Enums.Http.ResponceType.BodyOnly, 30000);
+	strAPIResponse2 = new Regex(@"(?<=\n<span\ class=""cont"">)[\w\W]*(?=<span\ class=""ico-holder\ region"">)").Match(strAPIResponse2).Value;
+	if (strAPIResponse2.Contains("Rus") || strAPIResponse2.Contains("rus")) {
+		Random ra = new Random();
+		string[] acceptLanguageSet2 = {
+		    "ru-RU,ru;q=0.8,en-US;q=0.6,en;q=0.4",
+		    "ru-RU,ru;q=0.9,en;q=0.8",
+		    "ru-RU,ru;q=0.8,en-US;q=0.5,en;q=0.3"
+		};
+		// Устанавливаем Accept-Language
+		string acceptLanguage2 = acceptLanguageSet2[ra.Next(0, acceptLanguageSet2.Length)].ToString();
+		project.Profile.AcceptLanguage = acceptLanguage2;
+		// Устанавливаем настройки языка
+		project.Profile.UserAgentBrowserLanguage = acceptLanguage2.Substring(0, acceptLanguage2.IndexOf(','));
+		project.Profile.UserAgentLanguage = acceptLanguage2.Substring(0, acceptLanguage2.IndexOf(','));
+	} else {
+		Random Ra = new Random();
+		string[] acceptLanguageSet3 = {
+				"en-US,en;q=0.5"
+		};
+		string acceptLanguage3 = acceptLanguageSet3[Ra.Next(0, acceptLanguageSet3.Length)].ToString();
+		project.Profile.AcceptLanguage = acceptLanguage3;
+		// Устанавливаем настройки языка
+		project.Profile.UserAgentBrowserLanguage = acceptLanguage3.Substring(0, acceptLanguage3.IndexOf(','));
+		project.Profile.UserAgentLanguage = acceptLanguage3.Substring(0, acceptLanguage3.IndexOf(','));
+	}
+	instance.SetProxy("", false, true, true);
+}
+
+string strKluchGoogle = project.Variables["KluchGoogle"].Value;
+int intColGroupPosting = Convert.ToInt32(project.Variables["ColGroupPosting"].Value);
+int intVremyaG1 = Convert.ToInt32(project.Variables["VremyaG1"].Value);
+int intVremyaG2 = Convert.ToInt32(project.Variables["VremyaG2"].Value);
+string strLinkVideoGoogle = project.Variables["LinkVideoGoogle"].Value;
+string strGroupInput = project.Variables["spisok_GoogleGroup"].Value;
+
+List<string> lstVideoUrl = new List<string>();
+string[] arrAddToList = strLinkVideoGoogle.Split('\n');
+lstVideoUrl.AddRange(arrAddToList);
+// Авторизация
+string strLoginInput = project.Variables["LoginPars"].Value;
+string strPassInput = project.Variables["PassPars"].Value;
+
+//Проверяю заполнено ли поле логин
+string strPhoneNumber = String.Empty;
+string strConfirmationCode = String.Empty;
+string strServiseSite = string.Empty;
+string strOperator = string.Empty;
+string strRegistrationID = string.Empty;
+string strSetStatusResult = string.Empty;
+string resultCode = string.Empty;
+string strUserAgent = string.Empty;
+string strLogin = string.Empty;
+string strPass = string.Empty;
+string strPhone = string.Empty;
+string strAkk = string.Empty;
+string strSmsService = project.Variables["cfg_sms_service"].Value;
+string strCaptchaService = project.Variables["cfg_captcha_service"].Value;
+
+if (tblMultiakk.RowCount==0) {
+	project.SendInfoToLog("Нет акков в таблице", true);
+	Global.SpecialForms.AlertNotificator.Instance.DisplayAlert("Неудача", "Нет акков в таблице", null, 15000);
+	throw new Exception("Error");
+}		
+lock (SyncObjects.TableSyncer) {
+	string[] cells = tblMultiakk.GetRow(0).ToArray();
+	strLogin = cells[0];
+	strPass = cells[1];
+	strProxy = cells[2];
+	strUserAgent = cells[3];
+	strPhone = cells[4];
+	//tblMultiakk.DeleteRow(0);
+	tblMultiakk.AddRow(new String[]{strLogin, strPass, strProxy, strUserAgent, strPhone});
+}
+
+	project.SendInfoToLog(String.Format("Логин: {0}, Пароль: {1}, Прокси: {2}, Юзер Агент: {3}", strLogin, strPass, strProxy, strUserAgent), true);
+//Получаем данные профиля
+string strFilePath1 = project.Directory + @"\Google Autopost\Cookie\" + strLogin + ".zpprofile";
+string strDirectoryPath1 = project.Directory + @"\Google Autopost\Cookie\";
+//Directory.CreateDirectory: создаём новую папку
+Directory.CreateDirectory(strDirectoryPath1);
+if (File.Exists(strFilePath1)) {
+    project.Profile.Load(project.Directory + @"\Google Autopost\Cookie\" + strLogin + ".zpprofile"); //загружаем профиль
+	Tab1.Navigate("https://www.youtube.com/");
+	Tab1.WaitDownloading();
+		goto yakop;
+} else {
+//	//Устанавливаю прокси
+	strProxy = instance.GetProxy();
+	if (strProxy==string.Empty) {
+		instance.SetProxy(strProxy, false); // взял этот код из уже готовых кубиков
+	}
+}
+instance.UseJavaApplets = false;
+instance.UseJavaScripts = false;
+Tab1.Navigate("https://accounts.google.com/ServiceLogin?sacu=1&continue=https%3A%2F%2Fwww.youtube.com%2Fsignin%3Faction_handle_signin%3Dtrue%26next%3D%252F%26app%3Ddesktop%26feature%3Dsign_in_button%26hl%3Dru&hl=ru&service=youtube#identifier");
+Tab1.WaitDownloading();
+
+if (!Tab1.FindElementByXPath("//input[@id='identifierId']",0).IsVoid) {
+	Tab1.FindElementByXPath("//input[@id='identifierId']",0).SetValue(strLogin,"Full");
+	Tab1.FindElementByXPath("//div[@id='identifierNext']",0).Click();
+	Thread.Sleep(3000);
+	Tab1.FindElementByXPath("//input[@name='password']",0).SetValue(strPass,"Full");
+	instance.UseJavaApplets = true;
+	instance.UseJavaScripts = true;
+	Tab1.FindElementByXPath("//div[@id='passwordNext']",0).Click();
+	Thread.Sleep(3000);
+	Tab1.WaitDownloading();
+	if (!Tab1.FindElementByXPath("//div[text()='Готово']",0).IsVoid) {
+		Tab1.FindElementByXPath("//div[text()='Готово']",0).Click();
+		Thread.Sleep(5000);
+		Tab1.WaitDownloading();
+	}
+	if (!Tab1.FindElementByXPath("//span[text()='Подтвердите резервный адрес электронной почты' or text()='mail']",0).IsVoid) {
+		Tab1.FindElementByXPath("//span[text()='Подтвердите резервный адрес электронной почты' or text()='mail']",0).Click();
+		Thread.Sleep(3000);
+		if (strPhone==string.Empty) {
+			project.SendInfoToLog("Вставьте в файл multiakk.txt резервный адрес электронной почты, либо номер телефона. СМотрите видео инструкции по Pinger я все там говорил об этом",true);
+			return "oki";
+		}
+		Tab1.FindElementByXPath("//input[@name='email']",0).SetValue(strPhone,"Full");
+		instance.WaitFieldEmulationDelay();
+		instance.SendText("{ENTER}", 15);
+		Tab1.WaitDownloading();
+	}
+	if (!Tab1.FindElementByXPath("//span[contains(text(),'номер телефона')]",0).IsVoid) {
+		Tab1.FindElementByXPath("//span[contains(text(),'номер телефона')]",0).Click();
+		Thread.Sleep(3000);
+		Tab1.FindElementByXPath("//input[@id='phoneNumberId']",0).SetValue(strPhone,"Full");
+		instance.WaitFieldEmulationDelay();
+		instance.SendText("{ENTER}", 15);
+		Tab1.WaitDownloading();
+	}
+	if (!Tab1.FindElementByXPath("//input[@id='idvPin']",0).IsVoid) {
+		project.SendInfoToLog(string.Format("Двухэтапная аутентификация. Мы отправили SMS с 6-значным кодом подтверждения"),true);
+		int t = 50;
+		for (int i=0; i<10; i++) {
+			string strTelCode = Tab1.FindElementByXPath("//input[@id='idvPin']",0).GetAttribute("value");
+			if (strTelCode==string.Empty) {
+				t-=5;
+				project.SendInfoToLog(string.Format("У Вас осталось {0} секунд на ввод кода из смс, проверьте сейчас свой телефон",t),true);
+				Thread.Sleep(5000);
+				continue;
+			}
+			Thread.Sleep(5000);
+			Tab1.FindElementByXPath("//div[@id='idvPreregisteredPhoneNext']",0).Click();
+			Thread.Sleep(2000);
+			Tab1.WaitDownloading();
+			break;
+		}
+	}
+	if (!Tab1.FindElementByXPath("//img[contains(@class, 'center')]",0).IsVoid) {
+		Tab1.FindElementByXPath("//input[@id='smsauth-interstitial-confirmbutton']",0).Click();
+		project.SendInfoToLog(string.Format("Сообщение: Не теряйте доступ к аккаунту - подтвердили!"),true);
+		Thread.Sleep(3000);
+		Tab1.WaitDownloading();
+	}
+} else {
+	Tab1.FindElementByXPath("//input[@id='Email']", 0).SetValue(strLogin, "Full");
+	Tab1.FindElementByXPath("//input[@id='next']", 0).Click();
+	Tab1.WaitDownloading();
+	Thread.Sleep(2000);
+	
+	Tab1.FindElementByXPath("//input[@name='Passwd']", 0).SetValue(strPass, "Full");
+	instance.UseJavaApplets = true;
+	instance.UseJavaScripts = true;
+	Tab1.FindElementByXPath("//input[@id='signIn']", 0).Click();
+	Tab1.WaitDownloading();
+}
+if (!Tab1.FindElementByXPath("//input[@name='password']",0).IsVoid) {
+	Tab1.FindElementByXPath("//input[@name='password']",0).SetValue(strPass, "Full");
+	Thread.Sleep(1000);
+	instance.SendText("{ENTER}",15);
+	Thread.Sleep(3000);
+	Tab1.WaitDownloading();		
+}
+if (!Tab1.FindElementByXPath("//input[@name='password']",0).IsVoid) {
+	throw new Exception("Не удалось авторизоваться, пишет что не верный пароль"); 
+}
+if (!Tab1.FindElementByXPath("//input[contains(id, 'dont_ask_again')]",0).IsVoid) {
+	Tab1.FindElementByXPath("//input[contains(name, 'pageid')]",0).Click();
+	Tab1.FindElementByXPath("//input[contains(id, 'dont_ask_again')]",0).Click();
+	Tab1.FindElementByXPath("//button[contains(id, 'confirm-button')]",0).Click();
+	Thread.Sleep(2000);
+}
+if (!Tab1.FindElementByXPath("//input[@id='idvPreregisteredPhonePin']",0).IsVoid) {
+	Global.SpecialForms.AlertNotificator.Instance.DisplayAlert("Завершение", "Просит ввести номер телефона", null, 15000);
+	project.SendErrorToLog("Авторизация не прошла, Просит ввести номер телефона", true);
+	project.SendInfoToLog("Есть 60 секунд на ввод кода из смс вручную", true);
+	Thread.Sleep(60000);
+}
+if (instance.ActiveTab.FindElementByXPath("//ol[contains(@id, 'challengePickerList')]/descendant::button/span[@class='mSMaIe']",0).InnerHtml.Contains("город")) {
+	instance.ActiveTab.FindElementByXPath("//ol[contains(@id, 'challengePickerList')]/descendant::button/span[@class='mSMaIe']",0).Click();
+	Thread.Sleep(4000);
+	instance.ActiveTab.FindElementByXPath("//input[contains(@id, 'answer')]",0).SetValue(strPhone, "Full");
+	instance.ActiveTab.FindElementByXPath("//input[contains(@id, 'submit')]",0).Click();
+	instance.ActiveTab.WaitDownloading();
+	Thread.Sleep(5000);
+}
+if (!Tab1.FindElementByXPath("//span[text()='Подтвердите резервный адрес электронной почты' or text()='mail']",0).IsVoid) {
+	Tab1.FindElementByXPath("//span[text()='Подтвердите резервный адрес электронной почты' or text()='mail']",0).Click();
+	Thread.Sleep(3000);
+	if (strPhone==string.Empty) {
+		project.SendInfoToLog("Вставьте в файл multiakk.txt резервный адрес электронной почты, либо номер телефона. СМотрите видео инструкции по Pinger я все там говорил об этом",true);
+		return "oki";
+	}
+	Tab1.FindElementByXPath("//input[@name='email']",0).SetValue(strPhone,"Full");
+	instance.WaitFieldEmulationDelay();
+	instance.SendText("{ENTER}", 15);
+	Tab1.WaitDownloading();
+}
+if (!Tab1.FindElementByXPath("//span[contains(text(),'номер телефона')]",0).IsVoid) {
+	Tab1.FindElementByXPath("//span[contains(text(),'номер телефона')]",0).Click();
+	Thread.Sleep(3000);
+	Tab1.FindElementByXPath("//input[@id='phoneNumberId']",0).SetValue(strPhone,"Full");
+	instance.WaitFieldEmulationDelay();
+	instance.SendText("{ENTER}", 15);
+	Tab1.WaitDownloading();
+}
+if (!Tab1.FindElementByXPath("//div[text()='Укажите резервный номер телефона' or text()='Confirm your recovery phone number']",0).IsVoid) {
+	Tab1.FindElementByXPath("//div[text()='Укажите резервный номер телефона' or text()='Confirm your recovery phone number']",0).Click();
+	Thread.Sleep(3000);
+	Tab1.WaitDownloading();
+	Tab1.FindElementByXPath("//input[@id='phoneNumberId']",0).SetValue(strPhone,"Full");
+	instance.WaitFieldEmulationDelay();
+	Thread.Sleep(5000);
+	instance.SendText("{ENTER}", 15);
+	Tab1.WaitDownloading();
+}
+if (!Tab1.FindElementByXPath("//span[@class='mSMaIe']/span[text()='Укажите резервный номер телефона' or text()='Confirm your recovery phone number']",0).IsVoid) {
+	Tab1.FindElementByXPath("//span[@class='mSMaIe']/span[text()='Укажите резервный номер телефона' or text()='Confirm your recovery phone number']",0).Click();
+	Thread.Sleep(3000);
+	Tab1.WaitDownloading();
+	Tab1.FindElementByXPath("//input[@name='phoneNumberId']",0).SetValue(strPhone,"Full");
+	instance.WaitFieldEmulationDelay();
+	instance.SendText(strPhone, 15);
+	instance.SendText("{ENTER}", 15);
+	Thread.Sleep(5000);
+	Tab1.WaitDownloading();
+}
+if (!Tab1.FindElementByXPath("//input[@id='deviceAddress']",0).IsVoid) {
+	switch(strSmsService) {
+		case "SmsActivate.dll":
+			strServiseSite = "go";
+			strOperator = "any";
+			break;
+		case "SmsVk.dll":
+			strServiseSite = "gg";
+			strOperator = "";
+			break;
+		case "SmsReg.dll":
+			strServiseSite = "gmail";
+			strOperator = "all";
+			break;
+		case "SimSmsOrg.dll":
+			strServiseSite = "opt1";
+			strOperator = "";
+			break;
+		case "GetSmsOnline.dll":
+			strServiseSite = "gm";
+			strOperator = "or";
+			break;
+		case "GiveSms.dll":
+			strServiseSite = "go";
+			strOperator = "any";
+			break;
+	}
+	strRegistrationID = ZennoPoster.Sms.GetNumber(strSmsService, out strPhoneNumber, strServiseSite,strOperator);
+	if (strPhoneNumber==string.Empty) {
+		project.SendInfoToLog("Не получили номер телефона, попробуйте сменить сервис и запустить снова",true);
+		return "Oki";
+	}
+	project.SendInfoToLog("Получен телефонный номер: " + strPhoneNumber, true);
+	//сообщаем сервису, что в ближайшие 2 минуты на номер придёт смс от указанного нами сервиса
+	strSetStatusResult = ZennoPoster.Sms.SetStatus(strSmsService, strRegistrationID, InterfacesLibrary.SmsService.Enums.SmsServiceStatus.Ready);
+	Thread.Sleep(2000);
+	if (strSetStatusResult=="Ready") {
+		Tab1.FindElementByXPath("//input[@id='deviceAddress']", 0).SetValue(strPhoneNumber, "Full"); //заполняем номер телефона в поле
+		Thread.Sleep(3000);
+		Tab1.FindElementByXPath("//input[@name='SendCode']", 0).Click(); //нажимаем "Зарегистрироваться"
+		Tab1.WaitDownloading();
+		Thread.Sleep(3000);
+		if (!Tab1.FindElementByXPath("//span[@id='error']",0).IsVoid) {
+			project.SendInfoToLog("Google спалил что это бот пытается активировать через телефон, выходим...",true);
+			return "oki";
+		}
+		for (int h=0; h<1; h++) {
+			if (!Tab1.FindElementByXPath("//img[@id='sad-robot']",0).IsVoid) {
+				project.SendInfoToLog("Google спалил что мы работаем ботом, рекомендую временно отдохнуть и пока перестать создавать подканалы",true);
+				Tab1.Navigate("https://www.youtube.com/channel_switcher");
+				Tab1.WaitDownloading();
+				break;
+			}
+			Tab1.Navigate("https://www.youtube.com/channel_switcher");
+			Tab1.WaitDownloading();
+		}
+		//здесь можно сделать дополнительное ожидание, но работает и так.
+		strConfirmationCode = ZennoPoster.Sms.GetStatus(strSmsService, strRegistrationID);
+		resultCode = Regex.Match(strConfirmationCode, @"\d+").Value;
+		Thread.Sleep(30000);
+		Tab1.FindElementByXPath("//input[@id='verify-phone-input']", 0).SetValue(resultCode, "Full");
+		Thread.Sleep(rndGenerator.Next(30000, 60000));
+		Tab1.FindElementByXPath("//input[@name='VerifyPhone']", 0).Click(); //нажимаем "Подтвердить"
+		Tab1.WaitDownloading();
+	}
+}
+if (!Tab1.FindElementByXPath("//span[text()='Подтвердите резервный адрес электронной почты' or text()='Confirm your recovery email']",0).IsVoid) {
+	Tab1.FindElementByXPath("//span[text()='Подтвердите резервный адрес электронной почты' or text()='Confirm your recovery email']",0).Click();
+	Thread.Sleep(3000);
+	Tab1.WaitDownloading();
+	project.SendInfoToLog("Подтвердите резервный адрес электронной почты",true);
+	project.SendInfoToLog("У Вас есть 30 секунд",true);
+	Tab1.FindElementByXPath("//input[@name='email']",0).SetValue(strPhone,"Full");
+	Thread.Sleep(30000);
+	instance.WaitFieldEmulationDelay();
+	instance.SendText("{ENTER}", 15);
+	Tab1.WaitDownloading();
+}
+if (!Tab1.FindElementByXPath("//div[text()='Готово']",0).IsVoid) {
+	Tab1.FindElementByXPath("//div[text()='Готово']",0).Click();
+	Thread.Sleep(5000);
+	Tab1.WaitDownloading();
+}
+if (!Tab1.FindElementByXPath("//input[@id='idvPin']",0).IsVoid) {
+	project.SendInfoToLog("Введите код из смс, у вас есть 60 секунд",true);
+	Thread.Sleep(60000);
+}
+if (!instance.ActiveTab.FindElementByXPath("//ytd-button-renderer[contains(@class, 'style-scope ytd-masthead style-default')]/a[contains(@class, 'style-scope ytd-button-renderer')]/button[@id='button']/yt-icon[contains(@class, 'style-scope ytd-button-renderer')]", 0).IsVoid) {
+	if (strLoginInput!=string.Empty) {
+		project.SendInfoToLog("Успешно залогинились под аккаунтом: " + strLoginInput, true);
+		Global.SpecialForms.AlertNotificator.Instance.DisplayAlert("Активация", "Успешно залогинились под аккаунтом: " + strLoginInput, null, 15000);
+	} else {
+		project.SendInfoToLog("Успешно залогинились под аккаунтом: " + strLogin, true);
+		Global.SpecialForms.AlertNotificator.Instance.DisplayAlert("Активация", "Успешно залогинились под аккаунтом: " + strLogin, null, 15000);
+	}
+} else {
+	Global.SpecialForms.AlertNotificator.Instance.DisplayAlert("Завершение", "Авторизация неудачна", null, 15000);
+	throw new Exception("Авторизация не прошла"); 
+}
+//Сохранить профиль
+yakop:
+project.Profile.Save(project.Directory + @"\Google Autopost\Cookie\" + strLogin + ".zpprofile", true, true, true, true, true); //сохранить профиль
+
+
+
+// Если строка поиска групп пустая
+List<string> lstSpisokIdGroups = new List<string>();
+if (strKluchGoogle!=string.Empty) {
+	// Ищем группы по ключевому запросу
+	Tab1.Navigate("https://plus.google.com/u/0/s/"+ strKluchGoogle +"/communities");
+	Tab1.WaitDownloading();
+	Thread.Sleep(10000);
+	if (!Tab1.FindElementByXPath("//c-wiz/div/descendant::content/span[string()='Продолжить']",0).IsVoid) {
+		Tab1.FindElementByXPath("//c-wiz/div/descendant::content/span[string()='Продолжить']",0).Click();
+		Thread.Sleep(3000);
+		Tab1.Navigate("https://plus.google.com/u/0/s/"+ strKluchGoogle +"/communities");
+		Tab1.WaitDownloading();
+	}
+	// Парсю группы
+	HtmlElementCollection AllLinksUser = Tab1.FindElementsByXPath("//h2/following-sibling::a");
+		foreach(HtmlElement elLinkUser in AllLinksUser.Elements) {
+		string strIdGroups = elLinkUser.GetAttribute("href");
+		if (strIdGroups!=string.Empty) lstSpisokIdGroups.Add(strIdGroups);
+		}
+	project.SendInfoToLog(string.Format("Всего спарсилось ID {0} групп",lstSpisokIdGroups.Count),true);
+} else {
+	string[] arrAddGroup = strGroupInput.Split('\n');
+	lstSpisokIdGroups.AddRange(arrAddGroup);
+}
+// Публикую видео
+for (int i=1; i<lstSpisokIdGroups.Count; i++) {
+	if (lstSpisokIdGroups.Count==0) {
+		project.SendErrorToLog("Закончились ссылки на группы",true);
+		return "Oki";
+	}
+	string strUrlGroups = lstSpisokIdGroups[0];
+	lstSpisokIdGroups.RemoveAt(0);
+	Tab1.Navigate(strUrlGroups);
+	Tab1.WaitDownloading();
+	Thread.Sleep(5000);
+	if (!Tab1.FindElementByXPath("//content/span[string()='Join' or string()='Присоединиться']",0).IsVoid) {
+		Tab1.FindElementByXPath("//content/span[string()='Join' or string()='Присоединиться']",0).Click();
+		Thread.Sleep(5000);
+		if (!Tab1.FindElementByXPath("//content/span[string()='Создать профиль' or string()='']",0).IsVoid) {
+			HtmlElement CreatProfile = Tab1.FindElementByAttribute("span", "innertext", "Создать\\ профиль", "regexp", 0);
+			// Задержка эмуляции
+			instance.WaitFieldEmulationDelay();
+			// Вызвать событие "click"
+			CreatProfile.RiseEvent("click", instance.EmulationLevel);
+			Thread.Sleep(5000);
+			Tab1.FindElementByXPath("//content/span[string()='Сохранить' or string()='Save']",0).Click();
+			Tab1.WaitDownloading();
+			Thread.Sleep(5000);
+			Tab1.FindElementByXPath("//content/span[string()='Join' or string()='Присоединиться']",0).Click();
+			Thread.Sleep(5000);
+		}
+	}
+	Tab1.FindElementByXPath("//c-wiz/descendant::a/following-sibling::div/span",0).Click();
+	Thread.Sleep(5000);
+	lstVideoUrl.Shuffle();
+	string VideoURL = lstVideoUrl[0];
+//	Tab1.FindElementByXPath("//textarea",0).SetValue(VideoURL+" ","Full");
+	instance.WaitFieldEmulationDelay();
+	instance.SendText(VideoURL, 15);
+	instance.SendText("  {ENTER}", 15);
+	Thread.Sleep(5000);
+	Tab1.FindElementByXPath("//content/span[string()='Post' or string()='Опубликовать']",0).Click();
+	Thread.Sleep(4000);
+	if (!Tab1.FindElementByXPath("//div[contains(@style, 'outline')]/content",0).IsVoid) {
+		Tab1.FindElementByXPath("//div[contains(@style, 'outline')]/content",0).Click();
+		Thread.Sleep(5000);
+	}
+	Thread.Sleep(rndGenerator.Next(intVremyaG1, intVremyaG2)*1000);	
+	project.SendInfoToLog(string.Format("Опубликовал {0} пост(а)",i), true);
+	if (i==intColGroupPosting) return "Oki";
+}
